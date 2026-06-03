@@ -235,7 +235,7 @@
                 <div class="container">
                     <div class="columns is-vcentered  is-centered">
                         <video id="teaser" muted loop controls height="100%" width="100%">
-            <source src="media/videos/sarm.mp4"
+            <source src="media/videos/SARM2_video_compressed.mp4"
                     type="video/mp4">
           </video>
                     </div>
@@ -252,7 +252,27 @@
                     <h2 class="title is-3">Abstract</h2>
                     <div class="content has-text-justified">
                         <p>
-                            Large-scale robot learning has made progress on complex manipulation tasks, yet long-horizon, contact-rich problems—especially those involving deformable objects—remain challenging due to inconsistent demonstration quality. We propose a stage-aware, video-based reward modeling framework that jointly predicts task stage and fine-grained progress, using natural-language subtask annotations to derive consistent labels across variable-length demonstrations. This avoids the brittleness of frame-index-based labeling and provides stable supervision even in tasks like T-shirt folding. Our reward model is robust to demonstration variability, generalizes to out-of-distribution scenarios, and improves downstream policy training. Building on it, we introduce Reward-Aligned Behavior Cloning (RA-BC), which filters and reweights demonstrations based on reward estimates. Experiments show that our method significantly outperforms baselines in both real-world rollouts and human validation. On T-shirt folding, we achieve 83% success from the flattened state and 67% from the crumpled state, compared to 8% and 0% with vanilla BC. Overall, our results highlight reward modeling as a scalable and annotation-efficient solution for long-horizon robotic manipulation. 
+                            Fine-tuning vision-language-action (VLA) policies for long-horizon
+                            manipulation still largely depends on behavior cloning, which requires costly
+                            high-quality demonstrations and limits policies to the demonstration distribution.
+                            Reward models can reduce this dependence by reweighting demonstrations and
+                            providing dense supervision for on-robot reinforcement learning (RL). However,
+                            an effective reward model must be dense, accurate, and general. Existing meth-
+                            ods do not satisfy all three: task-specific stage-aware models are dense and accu-
+                            rate but require per-task annotations, while general vision-language-model (VLM)
+                            based reward models are broadly applicable but too coarse and noisy for fine-
+                            grained long-horizon progress. To close this gap, we introduce SARM2, a multi-
+                            task stage-aware reward model that pairs a general action-primitive based stage
+                            estimator with a multi-gate Mixture-of-Experts (MMoE) value head, producing
+                            dense per-step rewards across multiple manipulation tasks. Built on SARM2’s ac-
+                            curate reward, we further design SPIRAL (Self-Policy Improvement via Reward-
+                            Aligned Learning), an on-policy reward-guided framework that refines a VLA
+                            policy from cheap autonomous rollouts using SARM2’s dense rewards. On a
+                            10-task benchmark, SARM2 reduces value-estimation MSE by 80% over the
+                            strongest baselines; plugged into SPIRAL, it boosts task success from around 50%
+                            to nearly perfect on both Folding Shorts (58% → 100%) and Cleaning White-
+                            board (50% → 90%), evidencing that high-quality dense rewards are a critical
+                            ingredient for a stable robot data flywheel.
                         </p>
                     </div>
                 </div>
@@ -260,111 +280,393 @@
 
             <hr class="rounded">
             <div class="rows">
-                <h2 class="title is-3">Overview of our method</h2>
+                <h2 class="title is-3">Overview of SARM2</h2>
                 <div class="column1 has-text-centered">
-                    <img src="media/figures/rm_plot.pdf" alt="arch-imag" style="width:80%">
+                    <img src="media/figures/rm_plot.png" alt="arch-imag" style="width:80%">
                 </div>
                 <p class="content has-text-justified">
-                    Overview of our method's framework for (a) data processing, (b) reward model training,
-                    and (c) policy training with reward signals. 
+                    Three camera views plus proprioceptive state are encoded by a
+                    shared frozen SigLIP-2 backbone, whose cached frame embeddings feed two separately trained
+                    causal Transformers: (i) a task-agnostic stage estimator that classifies the current segment over
+                    K+1=22 candidates (K=21 action primitives and a null class used as a fallback when the model is
+                    uncertain), and (ii) a multi-gate MoE value decoder whose gate is selected by the predicted primitive
+                    group and routes the fused token through top-k shared experts to produce a dense progress estimate.
                 </p>
             </div>
 
-            <hr class="rounded">
-            <div class="rows">
-                <h2 class="title is-3">SARM's structure</h2>
-                <div class="column1 has-text-centered">
-                    <img src="media/figures/rm.png" alt="arch-imag" style="width:80%">
-                </div>
-                <p class="content has-text-justified">
-                    Overview of SARM, stage-aware reward modeling. Left: SARM overview, which in-
-                    cludes both a stage estimator and subtask estimator. First the task stage is predicted from the ob-
-                    servations. This prediction is additionally passed into the subtask estimator which predicts a scale
-                    value of the progress within the stage. Right: An overview of the estimator architecture which is
-                    replicated for both the stage estimator and the subtask estimato
-                </p>
-            </div>
+            
 
             <hr class="rounded">
             <div class="rows">
-                <h2 class="title is-3">Results of SARM</h2>
+                <h2 class="title is-3">Results of SARM2 Value Estimation</h2>
 
-                
-                
-                <h4 class="title is-4">Demo Data Estimation</h4>
-                <div class="column1">
-                    <img src="media/figures/rm_demo.png" alt="arch-imag" style="width:100%">
+                 <h3 class="title is-4">Stage Estimation</h3>
+                <section class="hero teaser">
+                <div class="container is-max-widescreen">
+                    <div class="hero-body">
+                    <div class="container">
+
+                        <div class="columns is-vcentered is-centered">
+                        <div class="column">
+                            <video muted loop controls width="100%">
+                            <source src="media/videos/episode_1772.mp4" type="video/mp4">
+                            </video>
+                        </div>
+
+                        <div class="column">
+                            <video muted loop controls width="100%">
+                            <source src="media/videos/episode_2025.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                        </div>
+
+                        <h2 class="subtitle has-text-centered">
+                        </h2>
+
+                    </div>
+                    </div>
                 </div>
-                <p class="content has-text-justified">
-                    Examples of SARM's prediction on demonstration data
-                </p>
-
+                </section>
 
                 <section class="hero teaser">
                 <div class="container is-max-widescreen">
                     <div class="hero-body">
-                        <div class="container">
-                            <div class="columns is-vcentered  is-centered">
-                                <video id="teaser" muted loop controls height="100%" width="100%">
-                    <source src="media/videos/demo_sparse.mp4"
-                            type="video/mp4">
-                </video>
-                                </br>
-                            </div>
-                            <br>
-                            <h2 class="subtitle has-text-centered">
-                            </h2>
+                    <div class="container">
+
+                        <div class="columns is-vcentered is-centered">
+                        <div class="column">
+                            <video muted loop controls width="100%">
+                            <source src="media/videos/episode_2097.mp4" type="video/mp4">
+                            </video>
                         </div>
+
+                        <div class="column">
+                            <video muted loop controls width="100%">
+                            <source src="media/videos/episode_3046.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                        </div>
+
+                        <h2 class="subtitle has-text-centered">
+                        </h2>
+
+                    </div>
                     </div>
                 </div>
+                </section>
                 <p class="content has-text-justified">
-                    Video samples of SARM's prediction on demonstration data, delivering accurate and semantically meaningful estimations.
+                    Example videos show the stage estimator's predictions over action primitives and the downstream MoE expert selection. The results show a strong correlation between the predicted primitive and the selected experts.
                 </p>
 
-
-
-                <h4 class="title is-4">Policy Rollout Estimation</h4>
-                <div class="column1">
-                    <img src="media/figures/rm_rollout.png" alt="arch-imag" style="width:100%">
-                </div>
-                <p class="content has-text-justified">
-                    Examples of SARM's prediction on policy rollouts. 
-                    Compared with human demonstration data, policy rollouts are more challenging because
-                    they often include failure modes that are out-of-distribution (OOD), such as misgrasps, recovery
-                    attempts, and back-and-forth motions. In the first example, the trajectory corresponds to a successful
-                    rollout where the robot folds the T-shirt correctly, with only minor struggles and misgrasps in the
-                    first ten seconds. In this case, SARM remains stable, keeping the estimated progress near zero during
-                    these OOD motions.
-                    The second example highlights a failed rollout, with four key frames: (1) the T-shirt is flattened after
-                    struggling, (2) folding is nearly complete, (3) the robot suddenly fails and crumples the T-shirt on
-                    the table, and (4) the unfolded T-shirt is placed in the corner. SARM provides reasonable progress
-                    estimates across all four stages, reflecting the actual task status. 
-                </p>
-
-                <h4 class="title is-4">Leverage SARM for Policy Training</h4>
-                <div class="column1">
-                    <img src="media/figures/policy_rollout.png" alt="arch-imag" style="width:100%">
-                </div>
+                
+                
+                <h3 class="title is-4">Demo Data Estimation</h3>
+                
                 <section class="hero teaser">
                 <div class="container is-max-widescreen">
                     <div class="hero-body">
-                        <div class="container">
-                            <div class="columns is-vcentered  is-centered">
-                                <video id="teaser" muted loop controls height="100%" width="100%">
-                    <source src="media/videos/policy_rollout_4x.mp4"
-                            type="video/mp4">
-                </video>
-                                </br>
-                            </div>
-                            <br>
-                            <h2 class="subtitle has-text-centered">
-                            </h2>
+                    <div class="container">
+
+                        <div class="columns is-vcentered is-centered">
+                        <div class="column">
+                            <video muted loop controls width="100%">
+                            <source src="media/videos/episode_001126.mp4" type="video/mp4">
+                            </video>
                         </div>
+
+                        <div class="column">
+                            <video muted loop controls width="100%">
+                            <source src="media/videos/episode_000495.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                        </div>
+
+                        <h2 class="subtitle has-text-centered">
+                        </h2>
+
+                    </div>
                     </div>
                 </div>
+                </section>
+
+                <section class="hero teaser">
+                <div class="container is-max-widescreen">
+                    <div class="hero-body">
+                    <div class="container">
+
+                        <div class="columns is-vcentered is-centered">
+                        <div class="column">
+                            <video muted loop controls width="100%">
+                            <source src="media/videos/episode_002792.mp4" type="video/mp4">
+                            </video>
+                        </div>
+
+                        <div class="column">
+                            <video muted loop controls width="100%">
+                            <source src="media/videos/episode_002745.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                        </div>
+
+                        <h2 class="subtitle has-text-centered">
+                        </h2>
+
+                    </div>
+                    </div>
+                </div>
+                </section>
                 <p class="content has-text-justified">
-                    Example of RA-BC trained T-shirt folding policy rollout.
+                    Video samples of SARM2's value-estimation results across demonstration data from multiple tasks. Sarm2 provides dense and accurate value estimates for tasks ranging from around 30 seconds to over 2 minutes, all within a single model.
                 </p>
+
+
+
+                <h3 class="title is-4">Policy Rollout Estimation</h3>
+                
+                <p class="content has-text-justified">
+                    Examples of SARM2's prediction on policy rollouts on two qualitatively different tasks, Folding Shorts and Cleaning Whiteboard.
+                    SARM2 captures segment-level detail of the rollout: its predicted progress rises when
+                    the robot is making real progress, plateaus or dips when the robot is adjusting or struggling, and
+                    drops sharply at catastrophic failures, in agreement with the visualized key frames. 
+                </p>
+
+                <h4 class="title is-5">Folding Shorts</h4>
+                <section class="hero teaser">
+                <div class="container is-max-widescreen">
+                    <div class="hero-body">
+                    <div class="container">
+
+                        <div class="columns is-vcentered is-centered">
+                        <div class="column">
+                            <video muted loop controls width="100%">
+                            <source src="media/videos/rm_rollout_fold_shorts_1.mp4" type="video/mp4">
+                            </video>
+                        </div>
+
+                        <div class="column">
+                            <video muted loop controls width="100%">
+                            <source src="media/videos/rm_rollout_fold_shorts_2.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                        </div>
+
+                        <h2 class="subtitle has-text-centered">
+                        </h2>
+
+                    </div>
+                    </div>
+                </div>
+                </section>
+
+                <h4 class="title is-5">Cleaning Whiteboard</h4>
+                <section class="hero teaser">
+                <div class="container is-max-widescreen">
+                    <div class="hero-body">
+                    <div class="container">
+
+                        <div class="columns is-vcentered is-centered">
+                        <div class="column">
+                            <video muted loop controls width="100%">
+                            <source src="media/videos/rm_rollout_clean_wb_1.mp4" type="video/mp4">
+                            </video>
+                        </div>
+
+                        <div class="column">
+                            <video muted loop controls width="100%">
+                            <source src="media/videos/rm_rollout_clean_wb_2.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                        </div>
+
+                        <h2 class="subtitle has-text-centered">
+                        </h2>
+
+                    </div>
+                    </div>
+                </div>
+                </section>
+
+            <hr class="rounded">
+            <div class="rows">
+                <h2 class="title is-3">SPIRAL Workflow</h2>
+                <div class="column1 has-text-centered">
+                    <img src="media/figures/framework_plot.png" alt="arch-imag" style="width:80%">
+                </div>
+                <p class="content has-text-justified">
+                    SPIRAL: SARM2-powered self-improvement framework. (1) BC fine-tunes πVLA on
+                    demos to obtain π1. (2) In parallel, (2a) a one-time human annotation of ~100 rollouts from π1
+                    adapts RM1 → RM2 to cover the rollout distribution, while (2b) an offline SPIRAL update with
+                    the pretrained RM1 trains π2. (3) An autonomous loop then alternates rollout collection, RM2
+                    relabeling, and SPIRAL updates with no further supervision
+                </p>
+            </div>
+
+            <hr class="rounded">
+            <h3 class="title is-3">Policy Improvement with SPIRAL: Cleaning Whiteboard</h3>
+            <section class="hero teaser">
+            <div class="container is-max-widescreen">
+                <div class="hero-body">
+                <div class="container">
+
+                    <div class="columns is-centered is-vcentered">
+
+                    <div class="column is-half has-text-centered">
+                        <video muted loop controls width="100%">
+                        <source src="media/videos/clean_whiteboard_slow.mp4" type="video/mp4">
+                        </video>
+
+                        <p class="video-caption">
+                        SPIRAL Loop #1<br>
+                        Autonomous, 5x speed
+                        </p>
+                    </div>
+
+                    <div class="column is-half has-text-centered">
+                        <video muted loop controls width="100%">
+                        <source src="media/videos/clean_whiteboard_fast.mp4" type="video/mp4">
+                        </video>
+
+                        <p class="video-caption">
+                        SPIRAL Loop #3<br>
+                        Autonomous, 5x speed
+                        </p>
+                    </div>
+
+                    </div>
+
+                </div>
+                </div>
+            </div>
+            </section>
+
+            <hr class="rounded">
+            <h3 class="title is-3">Policy Improvement with SPIRAL: Folding Shorts</h3>
+
+            <h4 class="title is-4">Fold flat shorts</h4>
+            <section class="hero teaser">
+            <div class="container is-max-widescreen">
+                
+                <div class="hero-body">
+                <div class="container">
+
+                    <div class="columns is-centered is-vcentered">
+
+                    <div class="column is-half has-text-centered">
+                        <video muted loop controls width="100%">
+                        <source src="media/videos/fold_shorts_flat_fail.mp4" type="video/mp4">
+                        </video>
+
+                        <p class="video-caption">
+                        Base BC Policy<br>
+                        Autonomous, 5x speed
+                        </p>
+                    </div>
+
+                    <div class="column is-half has-text-centered">
+                        <video muted loop controls width="100%">
+                        <source src="media/videos/fold_shorts_flat_fast.mp4" type="video/mp4">
+                        </video>
+
+                        <p class="video-caption">
+                        SPIRAL Loop #3<br>
+                        Autonomous, 5x speed
+                        </p>
+                    </div>
+
+                    </div>
+
+                </div>
+                </div>
+            </div>
+            </section>
+
+            <h4 class="title is-4">Fold Crumbled shorts</h4>
+            <section class="hero teaser">
+            <div class="container is-max-widescreen">
+                
+                <div class="hero-body">
+                <div class="container">
+
+                    <div class="columns is-centered is-vcentered">
+
+                    <div class="column is-half has-text-centered">
+                        <video muted loop controls width="100%">
+                        <source src="media/videos/fold_shorts_full_fail.mp4" type="video/mp4">
+                        </video>
+
+                        <p class="video-caption">
+                        Base BC Policy<br>
+                        Autonomous, 5x speed
+                        </p>
+                    </div>
+
+                    <div class="column is-half has-text-centered">
+                        <video muted loop controls width="100%">
+                        <source src="media/videos/fold_shorts_full_fast_1.mp4" type="video/mp4">
+                        </video>
+
+                        <p class="video-caption">
+                        SPIRAL Loop #3<br>
+                        Autonomous, 5x speed
+                        </p>
+                    </div>
+
+                    </div>
+
+                </div>
+                </div>
+            </div>
+            </section>
+
+            <hr class="rounded">
+            <h3 class="title is-3">Unstopped Continual Rollout of SPIRAL improved Policies</h3>
+
+            <section class="hero teaser">
+            <div class="container is-max-widescreen">
+                <div class="hero-body">
+                <div class="container has-text-centered">
+
+                    <video id="teaser" muted loop controls width="100%">
+                    <source src="media/videos/clean_whiteboard_3_5x.mp4" type="video/mp4">
+                    </video>
+
+                    <p class="video-caption">
+                    Cleaning 3 whiteboards in a row, autonomnous, 5x speed
+                    </p>
+
+                    <br>
+
+                    <h2 class="subtitle has-text-centered">
+                    </h2>
+
+                </div>
+                </div>
+            </div>
+            </section>
+
+             <section class="hero teaser">
+            <div class="container is-max-widescreen">
+                <div class="hero-body">
+                <div class="container has-text-centered">
+
+                    <video id="teaser" muted loop controls width="100%">
+                    <source src="media/videos/fold_shorts_4_5x.mp4" type="video/mp4">
+                    </video>
+
+                    <p class="video-caption">
+                    Folding 4 shorts in a row, autonomous, 5x speed
+                    </p>
+
+                    <br>
+
+                    <h2 class="subtitle has-text-centered">
+                    </h2>
+
+                </div>
+                </div>
+            </div>
+            </section>
+                
                 
             </div>
 
@@ -375,7 +677,7 @@
                     If you find our work useful in your research, please consider citing:
                 </p>
                 <pre><code>
-@misc{chen2025sarm,
+<!-- @misc{chen2025sarm,
       title={SARM: Stage-Aware Reward Modeling for Long Horizon Robot Manipulation}, 
       author={Qianzhong Chen, Justin Yu, Mac Schwager, Pieter Abbeel, Fred Shentu, Philipp Wu},
       year={2025},
@@ -383,7 +685,7 @@
       archivePrefix={arXiv},
       primaryClass={cs.RO},
       url={https://arxiv.org/abs/2509.25358}, 
-    }
+    } -->
                 </code></pre>
             </div>
             
