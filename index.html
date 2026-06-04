@@ -88,6 +88,18 @@
     <link rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
+    <style>
+        .video-caption {
+            font-size: 1.25rem;
+        }
+        .task-select {
+            font-size: 1.25rem;
+        }
+        .task-select option {
+            font-size: 1.25rem;
+        }
+    </style>
+
 
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -113,6 +125,7 @@
                 <a target="_blank" href="https://uynitsuj.github.io/about/">Justin Yu</a><sup>2</sup>,
                 <a target="_blank" href="https://suninghuang19.github.io/">Suning Huang</a><sup>1</sup>,
                 <a target="_blank" href="https://web.stanford.edu/~jksun/">Jiankai Sun</a><sup>1</sup>,
+                <br>
                 <a target="_blank" href="https://goldberg.berkeley.edu/">Ken Goldberg</a><sup>2</sup>,
                 <a target="_blank" href="https://people.eecs.berkeley.edu/~pabbeel/">Pieter Abbeel</a><sup>2</sup>,
                 <a target="_blank" href="https://alvinwen428.github.io/">Chuan Wen</a><sup>3</sup>,
@@ -503,7 +516,39 @@
 
             <hr class="rounded">
             <h3 class="title is-3">Policy Improvement with SPIRAL: Cleaning Whiteboard</h3>
+
+            <h3 class="title is-4" style="margin-bottom: 0.5rem;">Base BC Policy: Troublesome Rollouts</h3>
+            <section class="section" style="padding-top: 0.5rem;">
+                <div class="container is-max-desktop">
+                    <div class="interactive-video-box">
+                    <label for="task-select" class="task-label" style="font-size: 1.5rem; font-weight: 600;">View Mistakes</label>
+
+                    <select id="task-select" class="task-select" onchange="updateTaskVideo()">
+                        <option value="media/videos/failure_rollouts/pick_up.mp4">Struggling picking up eraser </option>
+                        <option value="media/videos/failure_rollouts/drop.mp4">Drop the eraser </option>
+                        <option value="media/videos/failure_rollouts/low_bar.mp4">Grasp the lower bar </option>
+                        <option value="media/videos/failure_rollouts/push_far.mp4">Push the whiteboard too far </option>
+                        <option value="media/videos/failure_rollouts/flip.mp4">Flip the whiteboard </option>
+                        <option value="media/videos/failure_rollouts/nonstop.mp4">Non-stop when finished  </option>
+                        
+                    </select>
+
+                    <video
+                        id="task-video"
+                        class="interactive-video"
+                        src="media/videos/failure_rollouts/pick_up.mp4"
+                        muted
+                        playsinline
+                        loop
+                        controls
+                    >
+                    </video>
+                    </div>
+                </div>
+                </section>
+
             <section class="hero teaser">
+            <h3 class="title is-4">SPIRAL Improvement:</h3>
             <div class="container is-max-widescreen">
                 <div class="hero-body">
                 <div class="container">
@@ -630,7 +675,7 @@
                     <source src="media/videos/clean_whiteboard_3_5x.mp4" type="video/mp4">
                     </video>
 
-                    <p class="video-caption">
+                    <p class="video-caption" style="font-size: 1.5rem;">
                     Cleaning 3 whiteboards in a row, autonomnous, 5x speed
                     </p>
 
@@ -653,7 +698,7 @@
                     <source src="media/videos/fold_shorts_4_5x.mp4" type="video/mp4">
                     </video>
 
-                    <p class="video-caption">
+                    <p class="video-caption" style="font-size: 1.5rem;">
                     Folding 4 shorts in a row, autonomous, 5x speed
                     </p>
 
@@ -739,6 +784,26 @@
                 observer.observe(video);
             });
         });
+    </script>
+
+    <script>
+    function updateTaskVideo() {
+        var taskSelect = document.getElementById("task-select");
+        var taskVideo = document.getElementById("task-video");
+        if (!taskSelect || !taskVideo) { return; }
+
+        taskVideo.src = taskSelect.value;
+        taskVideo.load();
+        var playPromise = taskVideo.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(function () {
+                // Autoplay may be blocked if the browser does not allow it.
+            });
+        }
+    }
+
+    // Initialize on load so the displayed video matches the selected dropdown option.
+    document.addEventListener("DOMContentLoaded", updateTaskVideo);
     </script>
 
 </body>
